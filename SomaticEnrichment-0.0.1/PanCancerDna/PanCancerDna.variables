@@ -1,0 +1,6 @@
+read1Adapter="CTGTCTCTTATACACATCT"
+read2Adapter="CTGTCTCTTATACACATCT"
+padding=""
+minimumCoverage=20
+expectedInsertSize=300
+includeBQSR=True
