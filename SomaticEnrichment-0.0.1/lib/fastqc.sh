@@ -1,6 +1,7 @@
 #!/bin/bash
+set -euo pipefail
 
-echo "running fastqc.sh"
+echo "running fastqc"
 
 seqId=$1
 sampleId=$2

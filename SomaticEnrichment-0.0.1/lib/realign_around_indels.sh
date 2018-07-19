@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+# DEPRECATED - NO LONGER RECOMMENDED AS PART OF GATK PIPELINE
+
 echo "realigning around duplicates"
 
 seqId=$1

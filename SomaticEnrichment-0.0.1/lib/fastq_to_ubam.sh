@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Description: combine forwards and reverse reads into single
+#              unmapped bam file. 
+
 seqId=$1
 sampleId=$2
 laneId=$3

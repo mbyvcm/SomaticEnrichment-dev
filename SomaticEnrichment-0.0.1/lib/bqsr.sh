@@ -18,7 +18,7 @@ $gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir
     --known-sites /state/partition1/db/human/gatk/2.8/b37/1000G_phase1.indels.b37.vcf \
     --known-sites /state/partition1/db/human/gatk/2.8/b37/Mills_and_1000G_gold_standard.indels.b37.vcf \
     --input "$seqId"_"$sampleId"_rmdup.bam \
-    --intervals /home/cm/"$pipeline"/"$pipeline"-"$version"/"$panel"/"$panel"_ROI_b37.bed \
+    --intervals /data/diagnostics/pipelines/"$pipeline"/"$pipeline"-"$version"/"$panel"/"$panel"_ROI_b37.bed \
     --interval-padding 100 \
     --output "$seqId"_"$sampleId"_recal_data.table \
     --verbosity ERROR \
@@ -40,7 +40,7 @@ $gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir
     --known-sites /state/partition1/db/human/gatk/2.8/b37/1000G_phase1.indels.b37.vcf \
     --known-sites /state/partition1/db/human/gatk/2.8/b37/Mills_and_1000G_gold_standard.indels.b37.vcf \
     --input "$seqId"_"$sampleId".bam \
-    --intervals /home/cm/"$pipeline"/"$pipeline"-"$version"/"$panel"/"$panel"_ROI_b37.bed \
+    --intervals /data/diagnostics/pipelines/"$pipeline"/"$pipeline"-"$version"/"$panel"/"$panel"_ROI_b37.bed \
     --interval-padding 100 \
     --output "$seqId"_"$sampleId"_post_recal_data.table \
     --verbosity ERROR \
