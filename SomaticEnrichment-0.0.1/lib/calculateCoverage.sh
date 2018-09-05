@@ -29,11 +29,11 @@ gatk3=/share/apps/GATK-distros/GATK_3.8.0/GenomeAnalysisTK.jar
     -dt NONE
 
 # zip per-base coverage file
-awk -F'[\t|:]' '{if(NR>1) print $1"\t"$2"\t"$3}' "$seqId"_"$sampleId"_DepthOfCoverage | \
-     /share/apps/htslib-distros/htslib-1.4.1/bgzip > "$seqId"_"$sampleId"_DepthOfCoverage.gz
+#awk -F'[\t|:]' '{if(NR>1) print $1"\t"$2"\t"$3}' "$seqId"_"$sampleId"_DepthOfCoverage | \
+#     /share/apps/htslib-distros/htslib-1.4.1/bgzip > "$seqId"_"$sampleId"_DepthOfCoverage.gz
 
 # tabix index
-/share/apps/htslib-distros/htslib-1.4.1/tabix -b2 -e2 -s1 "$seqId"_"$sampleId"_DepthOfCoverage.gz
+#/share/apps/htslib-distros/htslib-1.4.1/tabix -b2 -e2 -s1 "$seqId"_"$sampleId"_DepthOfCoverage.gz
 
 #Make PASS BED
 #/share/apps/htslib-distros/htslib-1.4.1/tabix -R "$panel"_ClinicalCoverageTargetsHotspots.bed \

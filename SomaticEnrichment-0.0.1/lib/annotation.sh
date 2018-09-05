@@ -31,7 +31,12 @@ perl /share/apps/vep-distros/ensembl-tools-release-86/scripts/variant_effect_pre
     --custom /data/db/human/gnomad/gnomad.exomes.r2.0.1.sites.vcf.gz,GNOMAD,vcf,exact,0,AF \
     --custom /data/db/human/cosmic/b37/cosmic_78.b37.vcf.gz,COSMIC,vcf,exact,0
 
+# index and validation
+$gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx4g" \
+    IndexFeatureFile \
+    -F "$seqId"_"$sampleId"_filteredStr_annotated.vcf
 
+# extract variants PASSING filter
 $gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx4g" \
     SelectVariants \
     -R /state/partition1/db/human/gatk/2.8/b37/human_g1k_v37.fasta \

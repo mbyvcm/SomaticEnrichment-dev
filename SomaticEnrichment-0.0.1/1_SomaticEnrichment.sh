@@ -1,7 +1,6 @@
 #!/bin/bash
 #PBS -l walltime=20:00:00
 #PBS -l ncpus=12
-#PBS -l nodes=comp05
 set -euo pipefail
 
 PBS_O_WORKDIR=(`echo $PBS_O_WORKDIR | sed "s/^\/state\/partition1//"`)
@@ -15,7 +14,10 @@ cd $PBS_O_WORKDIR
 version="0.0.1"
 
 # load sample variables
-. ./*.variables
+. *.variables
+
+# copy script library
+cp -r /data/diagnostics/pipelines/"$pipelineName"/"$pipelineName"-"$pipelineVersion"/lib /data/results/"$seqId"/"$panel"/"$sampleId"/
 
 # load pipeline variables
 . /data/diagnostics/pipelines/"$pipelineName"/"$pipelineName"-"$pipelineVersion"/"$panel"/"$panel".variables
@@ -25,7 +27,7 @@ vendorCaptureBed=/data/diagnostics/pipelines/"$pipelineName"/"$pipelineName"-"$p
 
 # define fastq variables
 for fastqPair in $(ls "$sampleId"_S*.fastq.gz | cut -d_ -f1-3 | sort | uniq)
-    do
+do
     
     laneId=$(echo "$fastqPair" | cut -d_ -f3)
     read1Fastq=$(ls "$fastqPair"_R1_*fastq.gz)
@@ -39,9 +41,9 @@ for fastqPair in $(ls "$sampleId"_S*.fastq.gz | cut -d_ -f1-3 | sort | uniq)
         $read1Fastq \
         $read2Fastq \
         $read1Adapter \
-       $read2Adapter
+        $read2Adapter
 
-#    # fastqc
+    # fastqc
     ./lib/fastqc.sh $seqId $sampleId $laneId
 
      # fastq to ubam
@@ -56,20 +58,20 @@ for fastqPair in $(ls "$sampleId"_S*.fastq.gz | cut -d_ -f1-3 | sort | uniq)
     # bwa
     ./lib/bwa.sh $seqId $sampleId $laneId
     
-    done
+done
 
 # merge & mark duplicate reads
 ./lib/mark_duplicates.sh $seqId $sampleId 
 
 # basequality recalibration
+# >100^6 on target bases required for this to be effective
 if [ "$includeBQSR = true" ] ; then
-    ./lib/bqsr.sh $seqId $sampleId $pipelineName $version $panel
+    ./lib/bqsr.sh $seqId $sampleId $panel $vendorCaptureBed $padding
 else
     echo "skipping base quality recalibration"
     cp "$seqId"_"$sampleId"_rmdup.bam "$seqId"_"$sampleId".bam
     cp "$seqId"_"$sampleId"_rmdup.bai "$seqId"_"$sampleId".bai
 fi
-
 
 # post-alignment QC
 ./lib/post_alignment_qc.sh \
@@ -93,6 +95,9 @@ fi
     $minBQS \
     $minMQS
 
+# pull all the qc data together
+./lib/compileQcReport.sh $seqId $sampleId
+
 # variant calling
 ./lib/mutect2.sh $seqId $sampleId $pipelineName $version $panel $padding $minBQS $minMQS
 
@@ -102,9 +107,27 @@ fi
 # annotation
 ./lib/annotation.sh $seqId $sampleId
 
+# add samplename to run-level file if vcf detected
+if [ -e "seqId"_"$sampleId".vcf.gz ]
+then
+    echo $sampleId >> ../sampleVCFs.txt
+fi
 
 ## CNV ANALYSIS
 
-# GATK4 somatic-CNV best practices
-bash GATK4_somaticCNV.sh $seqId $sampleId $panel $ROI
+echo "Running CNV Analysis"
 
+# only run if all samples have completed
+numberSamplesInVcf=$(cat ../sampleVCFs.txt | uniq | wc -l)
+numberSamplesInProject=$(find ../ -maxdepth 2 -mindepth 2 | grep .variables | uniq | wc -l)
+
+if [ $numberSamplesInVcf -eq $numberSamplesInProject ]
+then
+    # run cnv kit
+    ./lib/cnvkit.sh $seqId $sampleId $panel $vendorCaptureBed
+
+    # run gatk somatic CNV calling pipeline
+    bash GATK4_somaticCNV.sh $seqId $sampleId $panel $ROI
+else
+    echo "not all samples have been run yet!"
+fi

@@ -47,7 +47,10 @@ gatk=/share/apps/GATK-distros/GATK_4.0.4.0/gatk
      BAIT_INTERVALS="$panel"_ROI.interval_list \
      TARGET_INTERVALS="$panel"_ROI.interval_list \
      MAX_RECORDS_IN_RAM=2000000 \
-     TMP_DIR=/state/partition1/tmpdir
+     TMP_DIR=/state/partition1/tmpdir \
+     MINIMUM_MAPPING_QUALITY=$minMQS \
+     MINIMUM_BASE_QUALITY=$minBQS \
+     CLIP_OVERLAPPING_READS=false
 
 $gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir=/state/partition1/tmpdir -Xmx4g" \
     CountReads \

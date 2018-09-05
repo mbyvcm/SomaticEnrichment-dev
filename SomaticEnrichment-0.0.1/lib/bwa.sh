@@ -59,6 +59,6 @@ laneId=$3
         
 
 # clean
-rm "$seqId"_"$sampleId"_"$laneId"_R1.fastq
-rm "$seqId"_"$sampleId"_"$laneId"_R2.fastq
-rm "$seqId"_"$sampleId"_"$laneId"_unaligned.bam
+#rm "$seqId"_"$sampleId"_"$laneId"_R1.fastq
+#rm "$seqId"_"$sampleId"_"$laneId"_R2.fastq
+#rm "$seqId"_"$sampleId"_"$laneId"_unaligned.bam

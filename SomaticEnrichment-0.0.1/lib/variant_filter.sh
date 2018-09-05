@@ -43,4 +43,3 @@ $gatk --java-options "-XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -Djava.io.tmpdir
     -O "$seqId"_"$sampleId"_filteredStr.vcf.gz \
     --verbosity ERROR \
     --QUIET true
-

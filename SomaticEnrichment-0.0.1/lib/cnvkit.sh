@@ -1,65 +1,56 @@
-#!/usr/bin/bash
+#!/bin/bash
 set -euo pipefail
 
-
+# script should be run once - when last sample in run has been processed
 seqId=$1
-sampleId=$2
-panel=IlluminaTruSightCancer
-ROI=./TEST/IlluminaTruSightCancer_ROI_b37.bed
+panel=$2
+vendorCaptureBed=$3
+
 FASTA=/data/db/human/gatk/2.8/b37/human_g1k_v37.fasta
 
-cnvkit=/share/apps/anaconda2/bin/cnvkit.py
-bams=(`ls ./TEST/$seqId/IlluminaTruSightCancer/*M*/*.bam`)
-samples=(`for i in ./TEST/$seqId/IlluminaTruSightCancer/*M*/; do basename $i;done`)
+# navigate to run directory
+cd /data/results/$seqId/$panel/
 
-#$cnvkit access \
+cnvkit=/share/apps/anaconda2/bin/cnvkit.py
+samples=$(for i in /data/results/$seqId/$panel/*M*/; do basename $i;done)
+bams=$(for s in $samples; do echo /data/results/$seqId/$panel/$s/"$seqId"_"$s".bam ;done)
+
+#  the access function has been pre-run
+#  only rerun this if using new annotations
+# $cnvkit access \
 #    $FASTA \
 #    -x ./resources/wgEncodeDacMapabilityConsensusExcludable.bed \
 #    -o ./resources/access-excludes.hg19.bed
 
-#$cnvkit autobin $bams -t $ROI -g ./resources/access-excludes.hg19.bed --annotate ./resources/refFlat.txt 
+# 1. RUN FOR ALL SAMPLES IN RUN
+#$cnvkit autobin $bams -t $vendorCaptureBed -g /data/db/human/cnvkit/access-excludes.hg19.bed --annotate /data/db/human/cnvkit/refFlat.txt 
 
-# iterate over bam files and calculate coverage
-#for i in ./TEST/$seqId/IlluminaTruSightCancer/*M*/
-#    do
+#if [ -e /data/results/$seqId/$panel/samplesCNVKit.txt ]
+#then
+#    rm /data/results/$seqId/$panel/samplesCNVKit.txt
+#fi
 
-#    sample=`basename $i`
+
+#for i in ${samples[@]}
+#do
+#    sample=$(basename $i)
 #    echo $sample
 
-#    $cnvkit coverage $i/*$sample.bam *.target.bed -o "$sample".targetcoverage.cnn
-#    $cnvkit coverage $i/*$sample.bam *.antitarget.bed -o "$sample".antitargetcoverage.cnn
+#    qsub -o ./$i/ -e ./$i/  /data/results/$seqId/$panel/$i/lib/1_cnvkit.sh -F "$cnvkit $seqId $panel $sample"
+#done
 
-#    done        
-
+#sleep 60m 
 
 for i in ${samples[@]}
-    do
-
+do
     test_sample=$i
     normal_samples=( ${samples[@]/$i} )
-    
-    tc="${normal_samples[@]/%/.targetcoverage.cnn}"
-    atc="${normal_samples[@]/%/.antitargetcoverage.cnn}"
 
-    echo "generating references"
-    echo "TEST: "$test_sample
-    echo "NORMALS: "${normal_samples[@]}
-    
+    qsub -o ./$i/ -e ./$i/ /data/results/$seqId/$panel/$i/lib/2_cnvkit.sh  -F "$cnvkit $seqId $panel $test_sample $normal_samples"
 
-    $cnvkit reference $tc $atc --fasta $FASTA  -o "$test_sample"_reference.cnn
-    echo "fixing ratios"
-    $cnvkit fix "$test_sample".targetcoverage.cnn "$test_sample".antitargetcoverage.cnn "$test_sample"_reference.cnn -o "$test_sample".cnr
-    echo "seqgmentation"
-    $cnvkit segment "$test_sample".cnr -m cbs -o "$test_sample".cns
-    echo "CNV calling"
-    $cnvkit call "$test_sample".cns -o "$test_sample".call.cns
+    cp /data/results/$seqId/$panel/"$i".targetcoverage.cnn /data/results/$seqId/$panel/$i/CNVKit/
+    cp /data/results/$seqId/$panel/"$i".antitargetcoverage.cnn /data/results/$seqId/$panel/$i/CNVKit/
+done
 
-    $cnvkit metrics "$test_sample".targetcoverage.cnn "$test_sample".antitargetcoverage.cnn "$test_sample".cnr -s "$test_sample".cns > "$test_sample".metrics
-    $cnvkit scatter "$test_sample".cnr -s "$test_sample".cns -o "$test_sample"-scatter.pdf
-    $cnvkit breaks "$test_sample".cnr "$test_sample".cns > "$test_sample".breaks
-    $cnvkit genemetrics "$test_sample".cnr -s "$test_sample".cns > "$test_sample".genemetrics
-    $cnvkit sex "$test_sample".cnn "$test_sample".cnr "$test_sample".cns > "$test_sample".sex
-    $cnvkit segmetrics "$test_sample".cnr -s "$test_sample".cns --ci --pi > "$test_sample".segmetrics
-
-
-    done
+cp /data/results/$seqId/$panel/*.target.bed /data/results/$seqId/$panel/$i/CNVKit/
+cp /data/results/$seqId/$panel/*.antitarget.bed /data/results/$seqId/$panel/$i/CNVKit/
